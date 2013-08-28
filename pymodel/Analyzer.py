@@ -6,31 +6,7 @@ import sys
 import os.path
 from copy import deepcopy
 
-# Interface to use the ugly old version
-a = Analyzer()
-anames           = a.anames
-states           = a.states
-initial          = a.initial
-accepting        = a.accepting
-frontier         = a.frontier
-finished         = a.finished
-deadend          = a.deadend
-runstarts        = a.runstarts
-unsafe           = a.unsafe
-explore          = a.explore
-state            = a.state
-initial_state    = a.initial_state
-runstarts_states = a.runstarts_states
-accepting_states = a.accepting_states
-frontier_states  = a.frontier_states
-finished_states  = a.finished_states
-deadend_states   = a.deadend_states
-unsafe_states    = a.unsafe_states
-save             = a.save
-actiondef        = Analyzer.actiondef
-quote_string     = Analyzer.quote_string
-transition       = Analyzer.transition
-# /Interface
+# FIXME: Ugly old interface is at the bottom
 
 class Analyzer ():
     def __init__ (self):
@@ -170,7 +146,7 @@ class Analyzer ():
                 (len(self.states), len(self.graph),   len(self.accepting),
                  len(self.unsafe), len(self.finished),len(self.deadend)))
         f.write('\n# actions here are just labels, but must be symbols with __name__ attribute\n\n')
-        f.writelines([ actiondef(aname)+'\n' for aname in self.anames ])
+        f.writelines([ Analyzer.actiondef(aname)+'\n' for aname in self.anames ])
         f.write('\n# states, key of each state here is its number in graph etc. below\n\n')
         f.write('states = {\n')
         for i,s in enumerate(self.states):
@@ -186,24 +162,52 @@ class Analyzer ():
         f.write('%s\n' % self.runstarts_states())
         f.write('\n# finite state machine, list of tuples: (current, (action, args, result), next)\n\n')
         f.write('graph = (\n')
-        f.writelines([ '  %s,\n' % self.transition(t) for t in graph ])
+        f.writelines([ '  %s,\n' % Analyzer.transition(t) for t in graph ])
         f.write(')\n')
         f.close()
         
-    @classmethod
+    @staticmethod
     def actiondef(aname):
         return 'def %s(): pass' % aname
 
-    @classmethod
+    @staticmethod
     def quote_string(x): # also appears in Dot
         if isinstance(x,tuple):
             return str(x)
         else:
             return "'%s'" % x if isinstance(x, str) else "%s" % x
 
-    @classmethod
+    @staticmethod
     def transition(t):
         # return '%s' % (t,) # simple but returns quotes around action name
         current, (action, args, result), next = t
         return '(%s, (%s, %s, %s), %s)' % (current, action, args, 
-                                           quote_string(result), next)
+                                      Analyzer.quote_string(result), next)
+
+# FIXME: Interface to use the ugly old version
+a = Analyzer()
+anames           = a.anames
+states           = a.states
+initial          = a.initial
+accepting        = a.accepting
+frontier         = a.frontier
+finished         = a.finished
+deadend          = a.deadend
+runstarts        = a.runstarts
+unsafe           = a.unsafe
+graph            = a.graph
+explore          = a.explore
+state            = a.state
+initial_state    = a.initial_state
+runstarts_states = a.runstarts_states
+accepting_states = a.accepting_states
+frontier_states  = a.frontier_states
+finished_states  = a.finished_states
+deadend_states   = a.deadend_states
+unsafe_states    = a.unsafe_states
+save             = a.save
+actiondef        = Analyzer.actiondef
+quote_string     = Analyzer.quote_string
+transition       = Analyzer.transition
+# /Interface
+
