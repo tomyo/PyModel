@@ -1,0 +1,36 @@
+digraph StackFSM {
+
+  // Nodes
+  0 [ style=filled, shape=ellipse, peripheries=2, fillcolor=lightgray,
+      tooltip="{'Stack': {'stack': []}}" ]
+  1 [ style=filled, shape=ellipse, peripheries=2, fillcolor=white,
+      tooltip="{'Stack': {'stack': [2]}}" ]
+  2 [ style=filled, shape=ellipse, peripheries=2, fillcolor=white,
+      tooltip="{'Stack': {'stack': [1]}}" ]
+  3 [ style=filled, shape=ellipse, peripheries=2, fillcolor=white,
+      tooltip="{'Stack': {'stack': [2, 2]}}" ]
+  4 [ style=filled, shape=ellipse, peripheries=2, fillcolor=orange,
+      tooltip="{'Stack': {'stack': [1, 2]}}" ]
+  5 [ style=filled, shape=ellipse, peripheries=2, fillcolor=orange,
+      tooltip="{'Stack': {'stack': [2, 1]}}" ]
+  6 [ style=filled, shape=ellipse, peripheries=2, fillcolor=orange,
+      tooltip="{'Stack': {'stack': [1, 1]}}" ]
+  7 [ style=filled, shape=ellipse, peripheries=2, fillcolor=orange,
+      tooltip="{'Stack': {'stack': [2, 2, 2]}}" ]
+  8 [ style=filled, shape=ellipse, peripheries=2, fillcolor=orange,
+      tooltip="{'Stack': {'stack': [1, 2, 2]}}" ]
+
+  // Transitions
+  0 -> 1 [ label="Push(2,)", tooltip="Push(2,)" ]
+  0 -> 2 [ label="Push(1,)", tooltip="Push(1,)" ]
+  1 -> 0 [ label="Pop()/2", tooltip="Pop()/2" ]
+  1 -> 3 [ label="Push(2,)", tooltip="Push(2,)" ]
+  1 -> 4 [ label="Push(1,)", tooltip="Push(1,)" ]
+  2 -> 0 [ label="Pop()/1", tooltip="Pop()/1" ]
+  2 -> 5 [ label="Push(2,)", tooltip="Push(2,)" ]
+  2 -> 6 [ label="Push(1,)", tooltip="Push(1,)" ]
+  3 -> 1 [ label="Pop()/2", tooltip="Pop()/2" ]
+  3 -> 7 [ label="Push(2,)", tooltip="Push(2,)" ]
+  3 -> 8 [ label="Push(1,)", tooltip="Push(1,)" ]
+  4 -> 1 [ label="Pop()/1", tooltip="Pop()/1" ]
+}

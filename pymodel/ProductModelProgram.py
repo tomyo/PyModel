@@ -31,13 +31,21 @@ class ProductModelProgram(object):
     self.TestSuite = False # used by pmt nruns logic
     self.module = dict()  # dict of modules keyed by name
     self.mp = dict()      # dict of model programs keyed by same module name
-
     # Populate self.module and self.mp from modules named in command line args
     # Models that users write are just modules, not classes (types)
     #  so we find out what type to wrap each one in 
     #  by checking for one of each type's required attributes using hasattr
     for mname in args: # args is list of module name
-      self.module[mname] = __import__(mname) 
+      names = mname.split('.')
+      if len(names) == 1:
+        self.module[mname] = __import__(mname)
+      elif len(names) > 1:
+        # It's a new type class based model
+        module = __import__(reduce(lambda x,y: x + y, names[:-1]))
+        mname = names[-1]
+        self.module[mname] = getattr(module, names[-1])() # Module is an object
+      else:
+        raise AssertionError(mname + " is not a valid module or class path name.")
       if hasattr(self.module[mname], 'graph'):
         self.mp[mname] = FSM(self.module[mname],options.exclude,options.action)
       # for backwards compatibility we accept all of these test_suite variants
@@ -47,7 +55,8 @@ class ProductModelProgram(object):
         self.mp[mname] = TestSuite(self.module[mname], 
                                    options.exclude, options.action)
         self.TestSuite = True # used by pmt nruns logic
-      elif self.module[mname].__doc__.strip().upper().startswith('PYMODEL CONFIG'):
+      elif self.module[mname].__doc__ and \
+          self.module[mname].__doc__.strip().upper().startswith('PYMODEL CONFIG'):
         pass # configuration module, merely importing it did all the work
       else:
         # got this far, should be a ModelProgram -- if not, crash

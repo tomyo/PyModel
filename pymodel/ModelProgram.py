@@ -7,6 +7,7 @@ Interface to a model program (python module) used by ProductModelProgram
 
 import sys
 import copy
+import types
 import inspect
 import itertools
 from model import Model
@@ -15,6 +16,7 @@ class ModelProgram(Model):
 
   def __init__(self, module, exclude, include):
     Model.__init__(self, module, exclude, include)
+    self.object = None
 
   def post_init(self):
     """
@@ -25,7 +27,13 @@ class ModelProgram(Model):
     # Do all of this work here rather than in __init__
     #  so it can include the effects of any pymodel config modules
 
+    # Make copies of collections that may be altered by post_init
     # recognize PEP-8 style names (all lowercase) if present
+    
+    if not isinstance(self.module, types.ModuleType):
+      self.object = self.module
+
+    
     if hasattr(self.module, 'accepting'):
       self.module.Accepting = self.module.accepting
     if hasattr(self.module, 'statefilter'):
@@ -53,9 +61,10 @@ class ModelProgram(Model):
       self.module.StateFilter = self.TrueDefault
     if not hasattr(self.module, 'StateInvariant'):
       self.module.StateInvariant = self.TrueDefault
-
+    
     # Make copies of collections that may be altered by post_init
-    self.actions =  list(self.module.actions)
+    self.actions = list(self.module.actions)
+    
     Model.post_init(self) # uses self.actions
 
 
@@ -64,6 +73,8 @@ class ModelProgram(Model):
     Parameter generator: return list of all args combos for action symbol a
     """
     arginfo = inspect.getargspec(a)# ArgInfo(args,varargs,keywords,locals)
+    if 'self' in arginfo.args:
+      arginfo.args.remove("self")
     if arginfo[0]:
       args = arginfo[0] # usual case: fixed sequence of positional arguments
     elif arginfo[1]:
@@ -114,6 +125,8 @@ class ModelProgram(Model):
     if a not in self.module.enablers:
       return True
     else:
+      if self.object:
+        args = (self.object, ) + args
       # Assumes enablers[a] has only one item, always true in this version
       a_enabled = self.module.enablers[a][0]
       nparams = len(inspect.getargspec(a_enabled)[0])
@@ -164,6 +177,8 @@ class ModelProgram(Model):
     """
     Execute action in model, update state,
     """
+    if self.object and type(a) != types.MethodType:
+      args = (self.object, ) + args
     return a(*args)
 
   def Current(self):
@@ -171,8 +186,9 @@ class ModelProgram(Model):
     Return current state, a dictionary of variable names to values
     This is used to save/restore states, so make deep copies of values
     """
-    return dict([(vname, copy.deepcopy(getattr(self.module, vname)))
+    result = dict([(vname, copy.deepcopy(getattr(self.module, vname)))
                   for vname in self.module.state ])
+    return result
 
   def Restore(self, state):
     """
